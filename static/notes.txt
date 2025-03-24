@@ -1,0 +1,17 @@
+frontend:
+sign in
+unique username _. unique auto id(int)
+make it look saxy
+
+
+backend:
+ensure one or many parameter result
+
+1. if primary given no secondary
+show all primary based data in sort by rank_score
+
+2. if only secondary ticked
+
+3. if primary and secondary(any box ticked)
+show primary but only jiska nox tick hai
+

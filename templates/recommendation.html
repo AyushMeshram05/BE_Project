@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Travel Recommendations</title>
+    
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    
+        <!-- Bootstrap Select CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/css/bootstrap-select.min.css">
+    
+        <style>
+        body { background-color: #f8f9fa; }
+        .container { margin-top: 5%; }
+        .form-container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .facet-group {
+            margin-bottom: 15px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        .table-heading {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+        }
+        </style>
+    </head>
+    
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="form-container">
+                    <h1 class="text-center">Get Travel Recommendations</h1>
+                    <form action="/recommendation" method="POST">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="userId" class="form-label">User ID</label>
+                                <input type="number" id="userId" name="user_id" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="type" class="form-label">Type</label>
+                                <select id="type" name="type" class="form-select selectpicker show-tick" data-live-search="true">
+                                    <option value="">Any</option>
+                                    {% for place_type in unique_types %}
+                                    <option value="{{ place_type }}">{{ place_type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label for="borough" class="form-label">Borough (Optional)</label>
+                                <select id="borough" name="borough" class="form-select selectpicker show-tick" data-live-search="true">
+                                    <option value="">Any</option>
+                                    {% for borough in unique_boroughs %}
+                                    <option value="{{ borough }}">{{ borough }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <h4>Filters</h4>
+                        {% for category, options in categories.items() %}
+                            <div class="facet-group">
+                                <strong>{{ category }}</strong>
+                                <div class="row">
+                                    {% for option in options %}
+                                    <div class="col-md-4">
+                                        <input type="checkbox" name="facets" value="{{ option }}"> {{ option }}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-custom mt-3">Get Recommendations</button>
+                        </div>
+                    </form>
+
+                    {% if exact_matches %}
+                    <div class="table-container">
+                        <div class="table-heading">Exact Matches (All Selected Options Matched)</div>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for place in exact_matches %}
+                                <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
+                                    <a href="{{ place.location_link }}" target="_blank">
+                                        <img src="{{ url_for('static', filename='location_img.png') }}" 
+                                        alt="Location link" width="30" height="30">
+                                    </a>
+                                    {% else %}
+                                        <span class="text-muted">No location available</span>
+                                    {% endif %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% elif partial_matches %}
+                    <div class="table-container">
+                        <div class="table-heading" style="background: #ff6600;">Partial Matches (Did Not Match All Options)</div>
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for place in partial_matches %}
+                                <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
+                                    <a href="{{ place.location_link }}" target="_blank">
+                                        <img src="{{ url_for('static', filename='location_img.png') }}" 
+                                        alt="Location link" width="30" height="30">
+                                    </a>
+                                    {% else %}
+                                        <span class="text-muted">No location available</span>
+                                    {% endif %}</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted">No recommendations found. Try different filters.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/js/bootstrap-select.min.js"></script>
+<script>
+    $(document).ready(function () {
+        console.log("jQuery Loaded, initializing Bootstrap Select...");
+        $('.selectpicker').selectpicker();
+    });
+</script>
+</body>
+</html>
