@@ -10,6 +10,9 @@
     
         <!-- Bootstrap Select CSS -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/css/bootstrap-select.min.css">
+        
+        <!-- Leaflet CSS -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     
         <style>
         body { background-color: #f8f9fa; }
@@ -35,6 +38,22 @@
             color: white;
             border-radius: 5px;
         }
+        #map { 
+            height: 500px; 
+            width: 100%; 
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .map-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .no-locations-message {
+            margin-top: 10px;
+            color: #d9534f;
+            display: none;
+        }
         </style>
     </head>
     
@@ -44,7 +63,7 @@
             <div class="col-md-10">
                 <div class="form-container">
                     <h1 class="text-center">Get Travel Recommendations</h1>
-                    <form action="/recommendation" method="POST">
+                    <form id="recommendationForm" action="/recommendation" method="POST">
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="userId" class="form-label">User ID</label>
@@ -72,70 +91,110 @@
                             </div>
                         </div>
 
-                        <h4>Filters</h4>
-                        {% for category, options in categories.items() %}
-                            <div class="facet-group">
-                                <strong>{{ category }}</strong>
-                                <div class="row">
-                                    {% for option in options %}
-                                    <div class="col-md-4">
-                                        <input type="checkbox" name="facets" value="{{ option }}"> {{ option }}
+                        <div class="accordion" id="filtersAccordion">
+                            {% for category, options in categories.items() %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                    <button class="accordion-button collapsed small-filter-btn" type="button" data-bs-toggle="collapse" 
+                                            data-bs-target="#collapse{{ loop.index }}" aria-expanded="false" 
+                                            aria-controls="collapse{{ loop.index }}">
+                                        {{ category }}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse" 
+                                     aria-labelledby="heading{{ loop.index }}" data-bs-parent="#filtersAccordion">
+                                    <div class="accordion-body small-filter-body">
+                                        <div class="row row-cols-4 g-2">
+                                            {% for row in options|batch(3, '&nbsp;') %}
+                                            <div class="col-12">
+                                                <div class="row row-cols-3 g-2">
+                                                    {% for option in row %}
+                                                    <div class="col d-flex align-items-center">
+                                                        <input type="checkbox" name="facets" value="{{ option }}" class="me-1"> 
+                                                        <label class="small-label">{{ option }}</label>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
                                     </div>
-                                    {% endfor %}
                                 </div>
                             </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                        
+                        <style>
+                            .small-filter-btn { font-size: 14px; padding: 8px; }
+                            .small-filter-body { padding: 10px; font-size: 13px; }
+                            .small-label { font-size: 13px; }
+                            .accordion-button:not(.collapsed) { background-color: #f8f9fa; }
+                        </style>
+                        
+                        
 
                         <div class="text-center">
-                            <button type="submit" class="btn btn-custom mt-3">Get Recommendations</button>
+                            <button type="submit" class="btn btn-primary mt-3">Get Recommendations</button>
                         </div>
                     </form>
 
-                    {% if exact_matches %}
-                    <div class="table-container">
-                        <div class="table-heading">Exact Matches (All Selected Options Matched)</div>
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for place in exact_matches %}
-                                <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
-                                    <a href="{{ place.location_link }}" target="_blank">
-                                        <img src="{{ url_for('static', filename='location_img.png') }}" 
-                                        alt="Location link" width="30" height="30">
-                                    </a>
-                                    {% else %}
-                                        <span class="text-muted">No location available</span>
-                                    {% endif %}</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <!-- Map section - always visible after form submission -->
+                    <div class="map-container">
+                        <h3 class="text-center mb-3">Recommended Places Map</h3>
+                        <div id="map"></div>
+                        <p id="noLocationsMessage" class="text-center no-locations-message">
+                            No location data available for the recommended places.
+                        </p>
                     </div>
-                    {% elif partial_matches %}
-                    <div class="table-container">
-                        <div class="table-heading" style="background: #ff6600;">Partial Matches (Did Not Match All Options)</div>
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
-                            </thead>
-                            <tbody>
-                                {% for place in partial_matches %}
-                                <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
-                                    <a href="{{ place.location_link }}" target="_blank">
-                                        <img src="{{ url_for('static', filename='location_img.png') }}" 
-                                        alt="Location link" width="30" height="30">
-                                    </a>
-                                    {% else %}
-                                        <span class="text-muted">No location available</span>
-                                    {% endif %}</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+
+                    <!-- Results tables -->
+                    <div id="resultsContainer">
+                        {% if exact_matches %}
+                        <div class="table-container">
+                            <div class="table-heading">Exact Matches (All Selected Options Matched)</div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for place in exact_matches %}
+                                    <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
+                                        <a href="{{ place.location_link }}" target="_blank">
+                                            <img src="{{ url_for('static', filename='location_img.png') }}" 
+                                            alt="Location link" width="30" height="30">
+                                        </a>
+                                        {% else %}
+                                            <span class="text-muted">No location available</span>
+                                        {% endif %}</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% elif partial_matches %}
+                        <div class="table-container">
+                            <div class="table-heading" style="background: #ff6600;">Partial Matches (Did Not Match All Options)</div>
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr><th>Name</th><th>Type</th><th>Borough</th><th>Sentiment Score</th><th>Location</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for place in partial_matches %}
+                                    <tr><td>{{ place.name }}</td><td>{{ place.type }}</td><td>{{ place.borough }}</td><td>{{ place.rank_score }}</td><td class="text-center">{% if place.location_link %}
+                                        <a href="{{ place.location_link }}" target="_blank">
+                                            <img src="{{ url_for('static', filename='location_img.png') }}" 
+                                            alt="Location link" width="30" height="30">
+                                        </a>
+                                        {% else %}
+                                            <span class="text-muted">No location available</span>
+                                        {% endif %}</td></tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p id="noRecommendationsMessage" class="text-center text-muted mt-4">No recommendations found. Try different filters.</p>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <p class="text-center text-muted">No recommendations found. Try different filters.</p>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -144,10 +203,212 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/js/bootstrap-select.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
+    // Map initialization
+    var map;
+    
+    // Initialize the map
+    function initMap() {
+        if (!map) {
+            // Center on India
+            map = L.map('map').setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+    }
+    
+    // Function to display places on the map
+    function displayPlacesOnMap(places) {
+        // Make sure map is initialized
+        if (!map) {
+            initMap();
+        }
+        
+        // Clear existing markers
+        map.eachLayer(layer => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+        
+        if (places && places.length > 0) {
+            let markers = [];
+            places.forEach(place => {
+                if (place.latitude && place.longitude) {
+                    const marker = L.marker([place.latitude, place.longitude])
+                        .addTo(map)
+                        .bindPopup(`<strong>${place.name}</strong><br>Type: ${place.type || 'Unknown'}<br>Sentiment Score: ${place.rank_score || 'N/A'}`);
+                    markers.push(marker.getLatLng());
+                }
+            });
+            
+            if (markers.length > 0) {
+                map.fitBounds(L.latLngBounds(markers));
+                $('#noLocationsMessage').hide();
+            } else {
+                // No locations with coordinates
+                map.setView([20.5937, 78.9629], 5); // Default to India view
+                $('#noLocationsMessage').show();
+            }
+        } else {
+            // No places at all
+            map.setView([20.5937, 78.9629], 5); // Default to India view
+            $('#noLocationsMessage').show();
+        }
+    }
+    
     $(document).ready(function () {
         console.log("jQuery Loaded, initializing Bootstrap Select...");
         $('.selectpicker').selectpicker();
+        
+        // Initialize map on page load but hide no locations message
+        initMap();
+        
+        // Check if we already have results on page load
+        if ($('.table-container').length > 0) {
+            $('#noLocationsMessage').hide();
+            
+            // Extract places from existing tables on the page
+            let places = [];
+            
+            // Check both exact and partial matches tables
+            $('.table-container table tbody tr').each(function() {
+                places.push({
+                    name: $(this).find('td:first-child').text(),
+                    type: $(this).find('td:nth-child(2)').text(),
+                    rank_score: $(this).find('td:nth-child(4)').text()
+                });
+            });
+            
+            if (places.length > 0) {
+                // Fetch locations for these places
+                $.ajax({
+                    url: "/get_locations",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        recommended_places: places.map(place => place.name)
+                    }),
+                    success: function(locationData) {
+                        // Merge location data with place data
+                        let placesWithLocations = places.map(place => {
+                            const locationInfo = locationData.find(loc => loc.name === place.name);
+                            if (locationInfo) {
+                                return {
+                                    ...place,
+                                    latitude: locationInfo.latitude,
+                                    longitude: locationInfo.longitude
+                                };
+                            }
+                            return place;
+                        });
+                        
+                        // Display places on map
+                        displayPlacesOnMap(placesWithLocations);
+                    },
+                    error: function(xhr) {
+                        console.error("Error fetching locations:", xhr.status, xhr.responseText);
+                        $('#noLocationsMessage').show();
+                    }
+                });
+            } else {
+                $('#noLocationsMessage').show();
+            }
+        } else {
+            // Hide map initially if no results
+            $('.map-container').hide();
+        }
+        
+        // Handle form submission with AJAX
+        $('#recommendationForm').submit(function(e) {
+            e.preventDefault();
+            
+            // Show map container
+            $('.map-container').show();
+            
+            $.ajax({
+                type: 'POST',
+                url: '/recommendation',
+                data: $(this).serialize(),
+                success: function(response) {
+                    // Extract the results container from the response
+                    var resultsHtml = $(response).find('#resultsContainer').html();
+                    $('#resultsContainer').html(resultsHtml);
+                    
+                    // Re-initialize the selectpicker if needed
+                    $('.selectpicker').selectpicker();
+                    
+                    // Get recommended places
+                    let places = [];
+                    
+                    // First check if we have exact matches
+                    if ($(response).find('.table-heading:contains("Exact Matches")').length > 0) {
+                        // Extract place names from exact matches
+                        $(response).find('.table-heading:contains("Exact Matches")').next('table').find('tbody tr').each(function() {
+                            places.push({
+                                name: $(this).find('td:first-child').text(),
+                                type: $(this).find('td:nth-child(2)').text(),
+                                rank_score: $(this).find('td:nth-child(4)').text()
+                            });
+                        });
+                    } 
+                    // If no exact matches, check for partial matches
+                    else if ($(response).find('.table-heading:contains("Partial Matches")').length > 0) {
+                        // Extract place names from partial matches
+                        $(response).find('.table-heading:contains("Partial Matches")').next('table').find('tbody tr').each(function() {
+                            places.push({
+                                name: $(this).find('td:first-child').text(),
+                                type: $(this).find('td:nth-child(2)').text(),
+                                rank_score: $(this).find('td:nth-child(4)').text()
+                            });
+                        });
+                    }
+                    
+                    if (places.length > 0) {
+                        // Fetch locations for the recommended places
+                        $.ajax({
+                            url: "/get_locations",
+                            type: "POST",
+                            contentType: "application/json",
+                            data: JSON.stringify({
+                                recommended_places: places.map(place => place.name)
+                            }),
+                            success: function(locationData) {
+                                // Merge location data with place data
+                                let placesWithLocations = places.map(place => {
+                                    const locationInfo = locationData.find(loc => loc.name === place.name);
+                                    if (locationInfo) {
+                                        return {
+                                            ...place,
+                                            latitude: locationInfo.latitude,
+                                            longitude: locationInfo.longitude
+                                        };
+                                    }
+                                    return place;
+                                });
+                                
+                                // Display places on map
+                                displayPlacesOnMap(placesWithLocations);
+                            },
+                            error: function(xhr) {
+                                console.error("Error fetching locations:", xhr.status, xhr.responseText);
+                                $('#noLocationsMessage').show();
+                            }
+                        });
+                    } else {
+                        // No places found in the response
+                        displayPlacesOnMap([]);
+                    }
+                },
+                error: function(xhr) {
+                    console.error("Error:", xhr.status, xhr.responseText);
+                    alert("Failed to get recommendations. Check console.");
+                    $('#noLocationsMessage').show();
+                }
+            });
+        });
     });
 </script>
 </body>
