@@ -23,7 +23,27 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Flask session secret key
 
+# Load the main dataframe
 df = pd.read_excel("merged_data_reviews_about.xlsx")
+
+# Debug: Print columns of df
+print("Columns in df before merge:", df.columns)
+
+# Check if 'rating' column exists in df
+if 'rating' in df.columns:
+    df['rating'] = df['rating'].fillna('No rating available')
+else:
+    print("Warning: 'rating' column not found in the DataFrame.")
+    df['rating'] = 'No rating available'
+
+# Load the additional dataframe with photos
+additional_df = pd.read_excel("outscraper_first.xlsx")
+
+# Merge only the 'photo' column from additional_df
+df = pd.merge(df, additional_df[['name', 'photo']], on='name', how='left')
+
+# Debug: Print columns of df after merge
+print("Columns in df after merge:", df.columns)
 
 # Add coordinates to the dataframe if they don't exist
 if 'latitude' not in df.columns or 'longitude' not in df.columns:
@@ -166,7 +186,7 @@ def get_locations():
     try:
         data = request.json
         place_names = data.get("recommended_places", [])
-        
+
         # Dictionary of known locations (you can expand this)
         known_locations = {
             "Mayur Artifacts": {"latitude": 18.5204, "longitude": 73.8567},  # Pune coordinates
@@ -174,15 +194,15 @@ def get_locations():
             "Top Art Gallery": {"latitude": 19.0760, "longitude": 72.8777},  # Mumbai
             # Add more known locations here as needed
         }
-        
+
         results = []
         for place_name in place_names:
             # First check if it's in our known locations dictionary
             matched = False
-            
+
             # Check for exact or partial matches in known locations
             for known_name, coords in known_locations.items():
-                if (place_name.lower() in known_name.lower() or 
+                if (place_name.lower() in known_name.lower() or
                     known_name.lower() in place_name.lower()):
                     results.append({
                         "name": place_name,
@@ -191,15 +211,15 @@ def get_locations():
                     })
                     matched = True
                     break
-            
+
             if not matched:
                 # Try to find in dataframe
                 place_data = df[df['name'].str.contains(place_name, case=False, na=False)]
-                
+
                 if not place_data.empty:
                     # Use the first match if multiple matches found
                     place = place_data.iloc[0]
-                    
+
                     # Check if place has latitude and longitude
                     if 'latitude' in place and 'longitude' in place and not pd.isna(place['latitude']) and not pd.isna(place['longitude']):
                         lat = float(place['latitude'])
@@ -226,13 +246,15 @@ def get_locations():
                             # Default to a random location in central India
                             lat = 20.5937 + (random.random() * 2 - 1)
                             lon = 78.9629 + (random.random() * 2 - 1)
-                    
+
                     results.append({
                         "name": place['name'],
                         "latitude": lat,
                         "longitude": lon,
                         "type": place['type'] if 'type' in place and not pd.isna(place['type']) else "Unknown",
-                        "rank_score": float(place['rank_score']) if 'rank_score' in place and not pd.isna(place['rank_score']) else 0
+                        "rank_score": float(place['rank_score']) if 'rank_score' in place and not pd.isna(place['rank_score']) else 0,
+                        "photo": place['photo'] if 'photo' in place and not pd.isna(place['photo']) else None,
+                        "rating": place['rating'] if 'rating' in place and not pd.isna(place['rating']) else 'No rating available'
                     })
                 else:
                     # If place not found, use Pune's coordinates as default or generate within India
@@ -246,21 +268,23 @@ def get_locations():
                         # Generate random coordinates within India
                         lat = 20.5937 + (random.random() * 8 - 4)  # +/- 4 degrees from center of India
                         lon = 78.9629 + (random.random() * 10 - 5)  # +/- 5 degrees from center of India
-                    
+
                     results.append({
                         "name": place_name,
                         "latitude": lat,
                         "longitude": lon,
                         "type": "Unknown",
-                        "rank_score": 0
+                        "rank_score": 0,
+                        "photo": None,
+                        "rating": 'No rating available'
                     })
-        
+
         return jsonify(results)
     except Exception as e:
         print(f"Error in get_locations: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-def recommend_places(user_id, place_type=None, borough=None, facets=None):
+def recommend_places(place_type=None, borough=None, facets=None):
     """
     Recommend places based on user_id, type, and/or borough.
     """
@@ -273,7 +297,8 @@ def recommend_places(user_id, place_type=None, borough=None, facets=None):
         recommendations = recommendations[recommendations["borough"].str.contains(borough, case=False, na=False)]
 
     if facets and len(facets) > 0:
-        recommendations[facets] = recommendations[facets].apply(lambda x: 1 if str(x).strip().upper() == "TRUE" else 0)
+
+        recommendations[facets] = recommendations[facets].map(lambda x: 1 if str(x).strip().upper() == "TRUE" else 0)
 
         # Compute match score
         recommendations["MatchScore"] = recommendations[facets].sum(axis=1)
@@ -293,11 +318,15 @@ def recommend_places(user_id, place_type=None, borough=None, facets=None):
         exact_matches = recommendations.sort_values(by="rank_score", ascending=False)
         partial_matches = pd.DataFrame()  # No partial matches in this case
 
+    # exact_matches["rank_score"] = exact_matches["rank_score"].round(2)
+    # partial_matches["rank_score"] = partial_matches["rank_score"].round(2)
+
+
     print("Exact Matches Found:", exact_matches.shape[0])
     print("Partial Matches Found:", partial_matches.shape[0])
 
     # Include latitude and longitude in the results
-    required_columns = ["name", "type", "borough", "rank_score", "location_link"]
+    required_columns = ["name", "type", "borough", "rank_score", "location_link", "photo", "rating"]
     if "latitude" in df.columns and "longitude" in df.columns:
         required_columns.extend(["latitude", "longitude"])
 
@@ -313,14 +342,14 @@ def recommend():
     selected_facets = []
     
     if request.method == "POST":
-        user_id = request.form.get('user_id')
+        # user_id = request.form.get('user_id')
         place_type = request.form.get('type')
         borough = request.form.get('borough')
         selected_facets = request.form.getlist('facets')
 
-        if user_id:
-            user_id = int(user_id)  # Convert user_id to int
-            exact_matches, partial_matches = recommend_places(user_id, place_type, borough, selected_facets)
+        # if user_id:
+        #     user_id = int(user_id)  # Convert user_id to int
+        exact_matches, partial_matches = recommend_places(place_type, borough, selected_facets)
 
     return render_template(
         'recommendation.html',

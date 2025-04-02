@@ -1,0 +1,44 @@
+def recommend_places(user_id, place_type=None, borough=None, facets=None):
+    """
+    Recommend places based on user_id, type, and/or borough.
+    """
+    recommendations = df.copy()
+
+    if place_type:
+        recommendations = recommendations[recommendations["type"].str.contains(place_type, case=False, na=False)]
+
+    if borough:
+        recommendations = recommendations[recommendations["borough"].str.contains(borough, case=False, na=False)]
+
+    if facets and len(facets) > 0:
+    
+        recommendations[facets] = recommendations[facets].map(lambda x: 1 if str(x).strip().upper() == "TRUE" else 0)
+
+        # Compute match score
+        recommendations["MatchScore"] = recommendations[facets].sum(axis=1)
+
+        # Exact matches (all facets matched)
+        exact_matches = recommendations[recommendations["MatchScore"] == len(facets)]
+
+        # Partial matches (some facets matched)
+        partial_matches = recommendations[recommendations["MatchScore"] > 0]
+        partial_matches = partial_matches[partial_matches["MatchScore"] < len(facets)]
+
+        # Sort results by rank_score
+        exact_matches = exact_matches.sort_values(by="rank_score", ascending=False).drop(columns=["MatchScore"])
+        partial_matches = partial_matches.sort_values(by="rank_score", ascending=False).drop(columns=["MatchScore"])
+    else:
+        # If no facets are selected, return all places sorted by rank_score
+        exact_matches = recommendations.sort_values(by="rank_score", ascending=False)
+        partial_matches = pd.DataFrame()  # No partial matches in this case
+
+    print("Exact Matches Found:", exact_matches.shape[0])
+    print("Partial Matches Found:", partial_matches.shape[0])
+
+    # Include latitude, longitude, photo, and rating in the results
+    required_columns = ["name", "type", "borough", "rank_score", "location_link", "photo", "rating"]
+    if "latitude" in df.columns and "longitude" in df.columns:
+        required_columns.extend(["latitude", "longitude"])
+
+    return exact_matches[required_columns], \
+           partial_matches[required_columns] if not partial_matches.empty else pd.DataFrame()

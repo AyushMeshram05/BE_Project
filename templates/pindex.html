@@ -3,25 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In & Sign Up</title>
+    <title>Sign In & Sign Up | Your Brand</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
         body {
-            background: url("https://picsum.photos/1600/900") no-repeat center center/cover;
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+        
+        .auth-container {
+            display: flex;
+            max-width: 900px;
+            width: 90%;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+        
+        .auth-image {
+            flex: 1;
+            background: url("https://picsum.photos/800/1200") no-repeat center center/cover;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .auth-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(67, 97, 238, 0.6);
+        }
+        
+        .auth-image-content {
+            position: relative;
+            color: white;
+            text-align: center;
+            padding: 0 40px;
+        }
+        
+        .auth-image-content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .auth-image-content p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        .auth-forms {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+        
         .form-container {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 30px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            width: 350px;
+            transition: all 0.3s ease;
         }
-        .hidden { display: none; }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .auth-forms h2 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 30px;
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #ced4da;
+            margin-bottom: 5px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .btn-primary, .btn-success, .btn-warning {
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: #2ec4b6;
+            border-color: #2ec4b6;
+        }
+        
+        .btn-success:hover {
+            background-color: #26a69a;
+            border-color: #26a69a;
+        }
+        
+        .btn-warning {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #e5127d;
+            border-color: #e5127d;
+            color: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .social-signin {
+            margin-top: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .social-signin::before {
+            content: "or";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: white;
+            padding: 0 10px;
+            color: #6c757d;
+        }
+        
+        .social-signin::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #dee2e6;
+        }
+        
+        .g_id_signin {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        a:hover {
+            color: var(--secondary-color);
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+        
+        .icon-input {
+            padding-left: 40px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .auth-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .auth-image {
+                display: none;
+            }
+            
+            .auth-forms {
+                padding: 30px 20px;
+            }
+        }
     </style>
 
     <!-- Google Sign-In API -->
@@ -29,84 +233,109 @@
     <meta name="google-signin-client_id" content="706372573975-5qk0q56c07p12hddpknv1cu6a448d1hf.apps.googleusercontent.com">
 </head>
 <body>
-
-    <!-- Sign In Form -->
-    <div class="form-container" id="signInForm">
-        <h2 class="text-center">Sign In</h2>
-        <form id="signinForm">
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" name="email" required>
+    <div class="auth-container">
+        <!-- Left side image with overlay -->
+        <div class="auth-image">
+            <div class="auth-image-content">
+                <h2>Welcome Back</h2>
+                <p>Access your account to continue your journey with us. We're dedicated to providing you with the best experience.</p>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" required>
-            </div>
-            <div class="mb-3 text-end">
-                <a href="#" onclick="toggleForms('forgotPasswordForm')">Forgot Password?</a>
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Sign In</button>
-            <div class="text-center mt-3">
-                <p>Don't have an account? <a href="#" onclick="toggleForms('signUpForm')">Sign Up</a></p>
-            </div>
-        </form>
-
-        <!-- Google Sign-In button -->
-        <div id="g_id_onload"
-            data-client_id="706372573975-5qk0q56c07p12hddpknv1cu6a448d1hf.apps.googleusercontent.com"
-            data-context="signin"
-            data-ux_mode="popup"
-            data-callback="onSignIn"
-            data-auto_prompt="false">
         </div>
-        <div class="g_id_signin" data-type="standard"></div>
-    </div>
+        
+        <!-- Right side forms -->
+        <div class="auth-forms">
+            <!-- Sign In Form -->
+            <div class="form-container" id="signInForm">
+                <h2>Sign In</h2>
+                <form id="signinForm">
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control icon-input" name="email" placeholder="Email address" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control icon-input" name="password" placeholder="Password" required>
+                    </div>
+                    <div class="mb-4 d-flex justify-content-end">
+                        <a href="#" onclick="toggleForms('forgotPasswordForm')">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                    <div class="text-center mt-4">
+                        <p>Don't have an account? <a href="#" onclick="toggleForms('signUpForm')">Create Account</a></p>
+                    </div>
+                </form>
 
-    <!-- Sign Up Form -->
-    <div class="form-container hidden" id="signUpForm">
-        <h2 class="text-center">Sign Up</h2>
-        <form id="signupForm">
-            <div class="mb-3">
-                <label class="form-label">Full Name</label>
-                <input type="text" class="form-control" name="name" required>
+                <!-- Google Sign-In button -->
+                <div class="social-signin">
+                    <div id="g_id_onload"
+                        data-client_id="706372573975-5qk0q56c07p12hddpknv1cu6a448d1hf.apps.googleusercontent.com"
+                        data-context="signin"
+                        data-ux_mode="popup"
+                        data-callback="onSignIn"
+                        data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin" data-type="standard"></div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" name="email" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" required>
-            </div>
-            <button type="submit" class="btn btn-success w-100">Sign Up</button>
-            <div class="text-center mt-3">
-                <p>Already have an account? <a href="#" onclick="toggleForms('signInForm')">Sign In</a></p>
-            </div>
-        </form>
-    </div>
 
-    <!-- Forgot Password Form -->
-    <div class="form-container hidden" id="forgotPasswordForm">
-        <h2 class="text-center">Forgot Password</h2>
-        <form id="forgotPassword">
-            <div class="mb-3">
-                <label class="form-label">Enter your email</label>
-                <input type="email" class="form-control" name="email" required>
+            <!-- Sign Up Form -->
+            <div class="form-container hidden" id="signUpForm">
+                <h2>Create Account</h2>
+                <form id="signupForm">
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                        <input type="text" class="form-control icon-input" name="name" placeholder="Full Name" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control icon-input" name="email" placeholder="Email address" required>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                        <input type="password" class="form-control icon-input" name="password" placeholder="Create Password" required>
+                    </div>
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                        <label class="form-check-label" for="termsCheck">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Create Account</button>
+                    <div class="text-center mt-4">
+                        <p>Already have an account? <a href="#" onclick="toggleForms('signInForm')">Sign In</a></p>
+                    </div>
+                </form>
             </div>
-            <button type="submit" class="btn btn-warning w-100">Reset Password</button>
-            <div class="text-center mt-3">
-                <p><a href="#" onclick="toggleForms('signInForm')">Back to Sign In</a></p>
+
+            <!-- Forgot Password Form -->
+            <div class="form-container hidden" id="forgotPasswordForm">
+                <h2>Recover Password</h2>
+                <p class="text-muted mb-4">Enter your email address and we'll send you instructions to reset your password.</p>
+                <form id="forgotPassword">
+                    <div class="input-group">
+                        <span class="input-icon"><i class="fas fa-envelope"></i></span>
+                        <input type="email" class="form-control icon-input" name="email" placeholder="Email address" required>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Reset Password</button>
+                    <div class="text-center mt-4">
+                        <p><a href="#" onclick="toggleForms('signInForm')">Back to Sign In</a></p>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 
     <script>
-        // Toggle Forms
+        // Toggle Forms with animation
         function toggleForms(formId) {
             document.getElementById('signInForm').classList.add('hidden');
             document.getElementById('signUpForm').classList.add('hidden');
             document.getElementById('forgotPasswordForm').classList.add('hidden');
-            document.getElementById(formId).classList.remove('hidden');
+            
+            // Small delay for better visual transition
+            setTimeout(() => {
+                document.getElementById(formId).classList.remove('hidden');
+            }, 100);
         }
 
         // Sign Up
@@ -114,13 +343,31 @@
             event.preventDefault();
             let formData = new FormData(this);
 
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            submitBtn.disabled = true;
+
             fetch('/signup', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
-                alert(data.success ? "Registered Successfully!" : data.error);
-                if (data.success) toggleForms('signInForm');
+                if (data.success) {
+                    showNotification("Registration successful! Please sign in.", "success");
+                    toggleForms('signInForm');
+                } else {
+                    showNotification(data.error, "danger");
+                }
             })
-            .catch(error => console.error("Error:", error));
+            .catch(error => {
+                console.error("Error:", error);
+                showNotification("An error occurred. Please try again.", "danger");
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         });
 
         // Sign In
@@ -128,13 +375,33 @@
             event.preventDefault();
             let formData = new FormData(this);
 
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Signing in...';
+            submitBtn.disabled = true;
+
             fetch('/signin', { method: 'POST', body: formData })
             .then(response => response.json())
             .then(data => {
-                alert(data.success ? "Login Successful!" : data.error);
-                if (data.success) window.location.href = "/recommendation";
+                if (data.success) {
+                    showNotification("Login successful! Redirecting...", "success");
+                    setTimeout(() => {
+                        window.location.href = "/recommendation";
+                    }, 1000);
+                } else {
+                    showNotification(data.error, "danger");
+                }
             })
-            .catch(error => console.error("Error:", error));
+            .catch(error => {
+                console.error("Error:", error);
+                showNotification("An error occurred. Please try again.", "danger");
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         });
 
         // Google Sign-In
@@ -147,14 +414,64 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) window.location.href = "/recommendation";
-                    else console.error("Google Sign-In failed:", data.error);
+                    if (data.success) {
+                        showNotification("Google sign-in successful! Redirecting...", "success");
+                        setTimeout(() => {
+                            window.location.href = "/recommendation";
+                        }, 1000);
+                    } else {
+                        showNotification(data.error || "Google Sign-In failed", "danger");
+                    }
                 })
-                .catch(error => console.error("Error:", error));
+                .catch(error => {
+                    console.error("Error:", error);
+                    showNotification("An error occurred. Please try again.", "danger");
+                });
             } else {
-                console.error("No credential received.");
+                showNotification("No credential received.", "danger");
             }
         }
+
+        // Notification function
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} notification-toast`;
+            notification.innerHTML = message;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.minWidth = '250px';
+            notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+            notification.style.borderRadius = '8px';
+            notification.style.animation = 'fadeIn 0.5s';
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.5s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
