@@ -60,7 +60,7 @@ if 'latitude' not in df.columns or 'longitude' not in df.columns:
     df['longitude'] = np.random.uniform(68.0, 97.0, len(df))  # Longitude range for India
 
 # MongoDB Connection
-MONGO_URI = "mongodb+srv://jatin_bihari:jatin123@cluster0.duslu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = ""
 try:
     client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
     client.admin.command('ping')
