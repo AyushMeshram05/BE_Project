@@ -524,6 +524,61 @@
         display: flex;
         gap: 10px;
     }
+    .place-selection {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+}
+
+.place-checkbox {
+    display: none;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    color: var(--accent-color);
+}
+
+.checkbox-label:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+.place-checkbox:checked + .checkbox-label {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: white;
+}
+
+.place-checkbox:checked + .checkbox-label i:before {
+    content: "\f00c"; /* fa-check */
+}
+
+.place-card {
+    position: relative; /* Add this to existing place-card styles */
+}
+
+/* Update itinerary section */
+.selected-places-count {
+    background-color: var(--success-color);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
     </style>
 </head>
 
@@ -566,19 +621,18 @@
                     <form id="recommendationForm" action="/recommendation" method="POST">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="type" class="form-label">Destination Type</label>
-                                <select id="type" name="type" class="form-select selectpicker show-tick" data-live-search="true">
-                                    <option value="">Any Type</option>
-                                    {% for place_type in unique_types %}
-                                    <option value="{{ place_type }}">{{ place_type }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+    <label for="type" class="form-label">Destination Type(s)</label>
+    <select id="type" name="type" class="form-select selectpicker show-tick" data-live-search="true" multiple data-selected-text-format="count > 2">
+        {% for place_type in unique_types %}
+        <option value="{{ place_type }}">{{ place_type }}</option>
+        {% endfor %}
+    </select>
+</div>
 
                             <div class="col-md-6 mb-3">
-                                <label for="borough" class="form-label">Borough</label>
+                                <label for="borough" class="form-label">Region</label>
                                 <select id="borough" name="borough" class="form-select selectpicker show-tick" data-live-search="true">
-                                    <option value="">Any Borough</option>
+                                    <option value="">Any Region</option>
                                     {% for borough in unique_boroughs %}
                                     <option value="{{ borough }}">{{ borough }}</option>
                                     {% endfor %}
@@ -644,6 +698,12 @@
                             <div class="place-grid">
                                 {% for place in exact_matches %}
                                 <div class="place-card">
+                                    <div class="place-selection">
+        <input type="checkbox" class="place-checkbox" id="place-{{ loop.index }}" data-place-name="{{ place.name }}">
+        <label for="place-{{ loop.index }}" class="checkbox-label">
+            <i class="fas fa-plus"></i>
+        </label>
+    </div>
                                     <div class="place-image">
                                         {% if place.photo %}
                                             <img src="{{ place.photo }}" alt="{{ place.name }}">
@@ -714,6 +774,12 @@
                             <div class="place-grid">
                                 {% for place in partial_matches %}
                                 <div class="place-card">
+                                    <div class="place-selection">
+        <input type="checkbox" class="place-checkbox" id="place-{{ loop.index }}" data-place-name="{{ place.name }}">
+        <label for="place-{{ loop.index }}" class="checkbox-label">
+            <i class="fas fa-plus"></i>
+        </label>
+    </div>
                                     <div class="place-image">
                                         {% if place.photo %}
                                             <img src="{{ place.photo }}" alt="{{ place.name }}">
@@ -787,33 +853,31 @@
                 </div>
 
                 <!-- Itinerary Planner Section -->
-                <div class="itinerary-container">
-                    <div class="itinerary-header">
-                        <h2>Your Travel Itinerary</h2>
-                        <div class="itinerary-controls">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-calendar-alt me-2"></i>Trip Duration
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" data-days="1">1 Day</a></li>
-                                    <li><a class="dropdown-item" href="#" data-days="2">2 Days</a></li>
-                                    <li><a class="dropdown-item" href="#" data-days="3">3 Days</a></li>
-                                    <li><a class="dropdown-item" href="#" data-days="4">4 Days</a></li>
-                                    <li><a class="dropdown-item" href="#" data-days="5">5 Days</a></li>
-                                    <li><a class="dropdown-item" href="#" data-days="7">1 Week</a></li>
-                                </ul>
-                            </div>
-                            <button id="generateItinerary" class="btn btn-success">
-                                <i class="fas fa-magic me-2"></i>Generate Itinerary
-                            </button>
-                        </div>
-                    </div>
-                    <div class="itinerary-content" id="itineraryContent">
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i> Generate an itinerary based on your recommended places.
-                        </div>
-                    </div>
+                <div class="itinerary-header">
+    <h2>Your Travel Itinerary</h2>
+    <div class="itinerary-controls">
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-calendar-alt me-2"></i>Trip Duration
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" data-days="1">1 Day</a></li>
+                <li><a class="dropdown-item" href="#" data-days="2">2 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-days="3">3 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-days="4">4 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-days="5">5 Days</a></li>
+                <li><a class="dropdown-item" href="#" data-days="7">1 Week</a></li>
+            </ul>
+        </div>
+        <button id="generateItinerary" class="btn btn-success">
+            <i class="fas fa-magic me-2"></i>Generate Itinerary
+        </button>
+    </div>
+</div>
+<div class="alert alert-info mb-3">
+    <i class="fas fa-info-circle me-2"></i>
+    <strong>Tip:</strong> Select specific places using the checkboxes on place cards, or generate an itinerary with all recommended places.
+</div>
                 </div>
             </div>
         </div>
@@ -1112,31 +1176,99 @@
             });
         });
 
+        // Global variable to store selected places
+let selectedPlaces = [];
+
+// Function to update selected places count
+function updateSelectedPlacesCount() {
+    const count = selectedPlaces.length;
+    let countElement = $('.selected-places-count');
+    
+    if (count > 0) {
+        if (countElement.length === 0) {
+            $('#generateItinerary').after('<span class="selected-places-count">' + count + ' places selected</span>');
+        } else {
+            countElement.text(count + ' places selected');
+        }
+    } else {
+        countElement.remove();
+    }
+}
+
+// Handle place checkbox changes
+$(document).on('change', '.place-checkbox', function() {
+    const placeName = $(this).data('place-name');
+    const placeCard = $(this).closest('.place-card');
+    
+    if ($(this).is(':checked')) {
+        // Add place to selected list
+        const placeData = {
+            name: placeName,
+            type: placeCard.find('.place-type-badge').text(),
+            borough: placeCard.find('.place-borough-badge').text(),
+            rating: placeCard.find('.place-rating').text().trim(),
+            rank_score: placeCard.find('.place-score').text().replace('Score: ', ''),
+            photo: placeCard.find('.place-image img').attr('src'),
+            location_link: placeCard.find('.place-location a').attr('href')
+        };
+        
+        // Check if place is not already in the list
+        if (!selectedPlaces.find(p => p.name === placeName)) {
+            selectedPlaces.push(placeData);
+        }
+        
+        // Add visual feedback
+        placeCard.addClass('selected-place');
+    } else {
+        // Remove place from selected list
+        selectedPlaces = selectedPlaces.filter(p => p.name !== placeName);
+        placeCard.removeClass('selected-place');
+    }
+    
+    updateSelectedPlacesCount();
+});
+
         // Handle itinerary generation
-        $('#generateItinerary').click(function() {
-    // Get the selected number of days
-    let days = parseInt($(this).closest('.itinerary-controls').find('.dropdown-toggle').text().trim());
-
-    // Get all recommended places
-    let places = [];
-    $('.place-card').each(function() {
-        places.push({
-            name: $(this).find('.place-name').text(),
-            type: $(this).find('.place-type-badge').text(),
-            borough: $(this).find('.place-borough-badge').text(),
-            rating: $(this).find('.place-rating').text().trim(),
-            rank_score: $(this).find('.place-score').text().replace('Score: ', ''),
-            photo: $(this).find('.place-image img').attr('src')
+        $('#generateItinerary').off('click').on('click', function() {
+    // Use selected places if any are selected, otherwise use all places
+    let placesToUse = selectedPlaces.length > 0 ? selectedPlaces : [];
+    
+    // If no places are selected, get all visible places as before
+    if (placesToUse.length === 0) {
+        $('.place-card').each(function() {
+            placesToUse.push({
+                name: $(this).find('.place-name').text(),
+                type: $(this).find('.place-type-badge').text(),
+                borough: $(this).find('.place-borough-badge').text(),
+                rating: $(this).find('.place-rating').text().trim(),
+                rank_score: $(this).find('.place-score').text().replace('Score: ', ''),
+                photo: $(this).find('.place-image img').attr('src'),
+                location_link: $(this).find('.place-location a').attr('href')
+            });
         });
-    });
+    }
 
-    if (places.length === 0) {
+    if (placesToUse.length === 0) {
         $('#itineraryContent').html(`
             <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i> No recommended places available to generate an itinerary. Please get recommendations first.
+                <i class="fas fa-exclamation-triangle me-2"></i> No places selected for itinerary. Please select some places or get recommendations first.
             </div>
         `);
         return;
+    }
+
+    // Get the selected number of days
+    let daysText = $(this).closest('.itinerary-controls').find('.dropdown-toggle').text().trim();
+    let days = 1; // default
+    
+    // Extract number from text like "3 Days" or "1 Week"
+    if (daysText.includes('Week')) {
+        days = 7;
+    } else {
+        const match = daysText.match(/(\d+)/);
+        if (match) {
+            days = parseInt(match[1]);
+        }
     }
 
     // Show loading state
@@ -1145,7 +1277,7 @@
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
-            <p class="mt-2">Generating your itinerary...</p>
+            <p class="mt-2">Generating itinerary for ${placesToUse.length} selected places...</p>
         </div>
     `);
 
@@ -1155,17 +1287,16 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify({
-            places: places,
+            places: placesToUse,
             days: days
         }),
         success: function(response) {
-    if (response.redirect) {
-        window.location.href = response.redirect;
-    } else {
-        $('#itineraryContent').html('<div class="alert alert-danger">Unexpected response format.</div>');
-    }
-}
-,
+            if (response.redirect) {
+                window.location.href = response.redirect;
+            } else {
+                $('#itineraryContent').html('<div class="alert alert-danger">Unexpected response format.</div>');
+            }
+        },
         error: function(xhr, status, error) {
             console.error("Error generating itinerary:", status, error);
             $('#itineraryContent').html(`
@@ -1177,6 +1308,15 @@
         }
     });
 });
+$('<style>')
+    .prop('type', 'text/css')
+    .html(`
+        .selected-place {
+            border: 2px solid var(--success-color) !important;
+            box-shadow: 0 0 10px rgba(46, 204, 113, 0.3) !important;
+        }
+    `)
+    .appendTo('head');
 
 
         // Handle trip duration selection
@@ -1384,6 +1524,134 @@ function updatePlacesWithDistance() {
         }
     });
 }
+// Autocomplete functionality
+$(document).ready(function() {
+    const searchInput = $('#placeSearch');
+    const autocompleteResults = $('#autocompleteResults');
+
+    // Show loading state
+    function showLoading() {
+        autocompleteResults.html('<div class="autocomplete-item">Loading...</div>').show();
+    }
+
+    // Hide loading state
+    function hideLoading() {
+        autocompleteResults.hide();
+    }
+
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+        let timeout;
+        return function() {
+            const context = this, args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                func.apply(context, args);
+            }, wait);
+        };
+    }
+
+    // Handle search input
+    searchInput.on('input', debounce(function() {
+        const query = $(this).val().trim();
+
+        if (query.length < 2) {
+            hideLoading();
+            return;
+        }
+
+        showLoading();
+
+        $.ajax({
+            url: '/autocomplete',
+            method: 'GET',
+            data: { query: query },
+            success: function(data) {
+                autocompleteResults.empty();
+
+                if (data.length > 0) {
+                    data.forEach(function(item) {
+                        $('<div class="autocomplete-item"></div>')
+                            .text(item)
+                            .appendTo(autocompleteResults)
+                            .click(function() {
+                                searchInput.val(item);
+                                autocompleteResults.hide();
+                                // Trigger search when an item is selected
+                                $('#searchButton').click();
+                            });
+                    });
+                    autocompleteResults.show();
+                } else {
+                    autocompleteResults.hide();
+                }
+            },
+            error: function() {
+                autocompleteResults.html('<div class="autocomplete-item">Error loading results</div>').show();
+            }
+        });
+    }, 300));
+
+    // Hide autocomplete when clicking outside
+    $(document).on('click', function(e) {
+        if (!searchInput.is(e.target) && !autocompleteResults.is(e.target) && autocompleteResults.has(e.target).length === 0) {
+            autocompleteResults.hide();
+        }
+    });
+
+    // Handle search button click
+    $('#searchButton').click(function() {
+        const placeName = searchInput.val().trim();
+
+        if (placeName) {
+            // Add searching class to input
+            searchInput.addClass('searching');
+
+            $.ajax({
+                url: '/get_place_by_name',
+                method: 'GET',
+                data: { name: placeName },
+                success: function(data) {
+                    searchInput.removeClass('searching');
+
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    // Create a temporary form to submit the place data
+                    const $form = $('<form>', {
+                        action: '/recommendation',
+                        method: 'POST'
+                    });
+
+                    // Add the place type as a hidden input
+                    $('<input>', {
+                        type: 'hidden',
+                        name: 'type',
+                        value: data.type
+                    }).appendTo($form);
+
+                    // Add the borough as a hidden input if available
+                    if (data.borough) {
+                        $('<input>', {
+                            type: 'hidden',
+                            name: 'borough',
+                            value: data.borough
+                        }).appendTo($form);
+                    }
+
+                    // Submit the form
+                    $form.appendTo('body').submit();
+                },
+                error: function() {
+                    searchInput.removeClass('searching');
+                    alert('Error searching for place. Please try again.');
+                }
+            });
+        }
+    });
+});
 
 // Initialize the distance calculation when the page is loaded
 document.addEventListener('DOMContentLoaded', function() {
