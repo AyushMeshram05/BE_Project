@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Travel Itinerary</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #2c3e50;
+        }
+        .itinerary-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin: 30px auto;
+            max-width: 900px;
+        }
+        .itinerary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .day-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .day-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .day-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        .itinerary-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="itinerary-container">
+            <h2 class="text-center mb-4">Your Travel Itinerary</h2>
+            <div class="itinerary-content" id="itineraryContent">
+                <div class="itinerary-text">
+                    {{ itinerary|safe }}
+                </div>
+            </div>
+            <div class="itinerary-actions">
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i> Print Itinerary
+                </button>
+                <button class="btn btn-outline-success" onclick="saveItinerary()">
+                    <i class="fas fa-save me-2"></i> Save Itinerary
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function saveItinerary() {
+            alert('Itinerary saved! (This is a placeholder - implement actual save functionality)');
+        }
+    </script>
+</body>
+</html>
